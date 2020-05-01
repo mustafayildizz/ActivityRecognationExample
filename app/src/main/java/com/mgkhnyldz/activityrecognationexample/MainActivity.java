@@ -13,6 +13,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -31,6 +32,7 @@ public class MainActivity extends AppCompatActivity  {
     static final long DETECTION_INTERVAL_IN_MILLISECONDS = 3 * 1000;
     public static final int CONFIDENCE = 70;
     private static final int PERMISSION_CODE = 1001;
+
 
 
 
@@ -54,10 +56,14 @@ public class MainActivity extends AppCompatActivity  {
         btnStartTrcking.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACTIVITY_RECOGNITION) != PackageManager.PERMISSION_GRANTED) {
-                    requestPermissions(new String[]{Manifest.permission.ACTIVITY_RECOGNITION}, PERMISSION_CODE);
-                } else {
+                if (Build.VERSION.SDK_INT < 29) {
                     startTracking();
+                } else {
+                    if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACTIVITY_RECOGNITION) != PackageManager.PERMISSION_GRANTED) {
+                        requestPermissions(new String[]{Manifest.permission.ACTIVITY_RECOGNITION}, PERMISSION_CODE);
+                    } else {
+                        startTracking();
+                    }
                 }
             }
         });
