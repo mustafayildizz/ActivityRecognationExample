@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">ActivityRecognationExample</string>
+
+    <string name="activity_in_vehicle">Sürüş</string>
+    <string name="activity_still">Durma</string>
+    <string name="activity_walking">Yürüme</string>
+
+</resources>
