@@ -137,7 +137,10 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="500dp"
-            android:id="@+id/linearLayoutTxtView"></TextView>
+            android:scrollbars="vertical"
+            android:id="@+id/linearLayoutTxtView">
+
+        </TextView>
 
         <Button
             android:layout_width="wrap_content"

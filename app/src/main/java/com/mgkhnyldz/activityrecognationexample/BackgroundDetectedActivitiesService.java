@@ -1,7 +1,9 @@
 package com.mgkhnyldz.activityrecognationexample;
 
+import android.app.Activity;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Binder;
 import android.os.IBinder;
@@ -10,15 +12,25 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.google.android.gms.location.ActivityRecognition;
 import com.google.android.gms.location.ActivityRecognitionClient;
+import com.google.android.gms.location.ActivityTransition;
+import com.google.android.gms.location.ActivityTransitionRequest;
+import com.google.android.gms.location.DetectedActivity;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class BackgroundDetectedActivitiesService extends Service {
 
     private static final String TAG = BackgroundDetectedActivitiesService.class.getSimpleName();
 
+    ActivityTransitionRequest request;
+
+    private Context mContext;
     private Intent mIntentService;
     private PendingIntent mPendingIntent;
     private ActivityRecognitionClient mActivityRecognitionClient;
@@ -44,15 +56,59 @@ public class BackgroundDetectedActivitiesService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-        mActivityRecognitionClient = new ActivityRecognitionClient(this);
+
+        List<ActivityTransition> transitions = new ArrayList<>();
+
+        transitions.add(
+                new ActivityTransition.Builder()
+                        .setActivityType(DetectedActivity.IN_VEHICLE)
+                        .setActivityTransition(ActivityTransition.ACTIVITY_TRANSITION_ENTER)
+                        .build());
+
+        transitions.add(
+                new ActivityTransition.Builder()
+                        .setActivityType(DetectedActivity.IN_VEHICLE)
+                        .setActivityTransition(ActivityTransition.ACTIVITY_TRANSITION_EXIT)
+                        .build());
+
+        transitions.add(
+                new ActivityTransition.Builder()
+                .setActivityType(DetectedActivity.WALKING)
+                .setActivityTransition(ActivityTransition.ACTIVITY_TRANSITION_ENTER)
+                .build());
+
+
+        transitions.add(
+                new ActivityTransition.Builder()
+                        .setActivityType(DetectedActivity.WALKING)
+                        .setActivityTransition(ActivityTransition.ACTIVITY_TRANSITION_EXIT)
+                        .build());
+
+        transitions.add(
+                new ActivityTransition.Builder()
+                .setActivityType(DetectedActivity.STILL)
+                .setActivityTransition(ActivityTransition.ACTIVITY_TRANSITION_ENTER)
+                .build());
+
+        transitions.add(
+                new ActivityTransition.Builder()
+                        .setActivityType(DetectedActivity.STILL)
+                        .setActivityTransition(ActivityTransition.ACTIVITY_TRANSITION_EXIT)
+                        .build());
+
+
+        request = new ActivityTransitionRequest(transitions);
+
+       // mActivityRecognitionClient = new ActivityRecognitionClient(this);
         mIntentService = new Intent(this, ActivityDetect.class);
         mPendingIntent = PendingIntent.getService(this, 1, mIntentService, PendingIntent.FLAG_UPDATE_CURRENT);
         requestActivityUpdatesButtonHandler();
     }
 
     public void requestActivityUpdatesButtonHandler() {
-        Task<Void> task = mActivityRecognitionClient.requestActivityUpdates(
-                MainActivity.DETECTION_INTERVAL_IN_MILLISECONDS,
+
+        Task<Void> task = ActivityRecognition.getClient(getApplicationContext()).requestActivityTransitionUpdates(
+                request,
                 mPendingIntent);
 
         task.addOnSuccessListener(new OnSuccessListener<Void>() {
@@ -77,11 +133,12 @@ public class BackgroundDetectedActivitiesService extends Service {
     }
 
     public void removeActivityUpdatesButtonHandler() {
-        Task<Void> task = mActivityRecognitionClient.removeActivityUpdates(
+        Task<Void> task = ActivityRecognition.getClient(getApplicationContext()).removeActivityUpdates(
                 mPendingIntent);
         task.addOnSuccessListener(new OnSuccessListener<Void>() {
             @Override
             public void onSuccess(Void result) {
+                mPendingIntent.cancel();
                 Toast.makeText(getApplicationContext(),
                         "Removed activity updates successfully!",
                         Toast.LENGTH_SHORT)
